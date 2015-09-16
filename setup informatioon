@@ -1,0 +1,174 @@
+Information:
+
+Host mastertaj
+	HostName ec2-52-88-189-215.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-197.us-west-2.compute.internal
+
+
+Host slave1taj
+	HostName ec2-52-88-227-37.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-196.us-west-2.compute.internal
+
+
+Host slave2taj
+	HostName ec2-52-88-65-205.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-195.us-west-2.compute.internal
+
+Host slave3taj
+	HostName ec2-52-88-170-136.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22d
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-44-223.us-west-2.compute.internal
+
+
+
+
+
+
+Host slave3taj.old
+	HostName ec2-52-88-86-79.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22d
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-194.us-west-2.compute.internal
+
+
+
+
+
+ZooKeeper:
+Host mastertaj
+	HostName ec2-52-88-189-215.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-197.us-west-2.compute.internal
+zookeeper ID: 1
+LEADER
+
+
+Host slave1taj
+	HostName ec2-52-88-227-37.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-196.us-west-2.compute.internal
+zookeeper ID: 2
+FOLLOWER
+
+
+Host slave2taj
+	HostName ec2-52-88-65-205.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-195.us-west-2.compute.internal
+zookeeper ID: 3
+FOLLOWER
+
+
+
+
+
+KAFKA:
+Host mastertaj
+	HostName ec2-52-88-189-215.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-197.us-west-2.compute.internal
+Broker ID: 0
+
+Host slave1taj
+	HostName ec2-52-88-227-37.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-196.us-west-2.compute.internal
+Broker ID: 1
+
+Host slave2taj
+	HostName ec2-52-88-65-205.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-195.us-west-2.compute.internal
+Broker ID: 2
+
+
+Kafka Manager
+Host slave2taj
+	HostName ec2-52-88-65-205.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-195.us-west-2.compute.internal
+
+
+
+CAMUS:
+Host mastertaj
+	HostName ec2-52-88-189-215.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-197.us-west-2.compute.internal
+
+
+HIVE:
+Host mastertaj
+	HostName ec2-52-88-189-215.us-west-2.compute.amazonaws.com
+	User ubuntu
+	Port 22
+	IdentityFile .ssh/insight-tajinder.pem
+Private DNS: ip-172-31-36-197.us-west-2.compute.internal
+
+
+
+
+NEW VOLUME:
+vol-6c76dd98			ip-172-31-36-194.us-west-2.compute.internal
+vol-7e29828a			ip-172-31-36-195.us-west-2.compute.internal
+vol-c929823d			ip-172-31-36-196.us-west-2.compute.internal				i-54e3b091
+vol-b1298245			ip-172-31-36-197.us-west-2.compute.internal				........90	
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+hadoop temp directory: /tmp/hadoop-ubuntu
+namenode directory is: /usr/local/hadoop/hadoop_data/hdfs/namenode
+datanode directory is: /usr/local/hadoop/hadoop_data/hdfs/datanode
+
+
+
+
+
+datanodes not working:
+The problem could be that the namenode was formatted after the cluster was set up and the datanodes were not, so the slaves are still referring to the old namenode.
+
+We have to delete and recreate the folder /home/hadoop/dfs/data on the local filesystem for the datanode.
+
+    Check your hdfs-site.xml file to see where dfs.data.dir is pointing to
+    and delete that folder (rm -r -f /usr/local/hadoop/hadoop_data/hdfs/datanode)
+    and then restart the datanode daemon on the machine (datanodes->: $HADOOP_HOME/sbin/hadoop-daemon.sh start datanode)
+
+The steps above should recreate the folder and resolve the problem. 
+
+
+
+
+
+Transfer file to another server (WordCount.java): 
+PROMPT$: scp -o "StrictHostKeyChecking no" -i ~/.ssh/insight-tajinder.pem /home/tajinder/taj/setup/WordCount.java ubuntu@ec2-52-88-189-215.us-west-2.compute.amazonaws.com:~/hadoop-examples/testExample/
+
+
