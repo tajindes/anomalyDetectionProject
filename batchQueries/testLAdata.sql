@@ -1,3 +1,3 @@
 describe ladsraw;
 
-select longitude from ladsraw limit 10;
+select * from ladsraw limit 80;
