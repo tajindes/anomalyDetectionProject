@@ -1,0 +1,697 @@
+<!--<html>
+
+ <head>
+
+    <title>{{title}} - microblog</title>
+
+ </head>
+
+ <body>
+
+    {% if jsonresponse %}
+
+    <h1>Hello, {{jsonresponse}}!</h1>
+
+    {% else %}
+
+    <h1>Hello, Insight Fellow!</h1>
+
+    {% endif %}
+
+ </body>
+
+</html>-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/tableStyle.css') }}"> 
+
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+.pac-container {
+  font-family: Roboto;
+}
+
+#type-selector {
+  color: #fff;
+  background-color: #4d90fe;
+  padding: 5px 11px 0px 11px;
+}
+
+#type-selector label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300;
+}
+    .bs-example{
+      margin: 20px;
+    }
+
+    </style>
+    <title>Places Searchbox</title>
+    <style>
+      #target {
+        width: 345px;
+      }
+
+
+
+
+
+
+
+
+    </style>
+<!--    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> 
+
+    <script src="js/jquery-2.1.3-jquery.min.js"></script> 
+    <script src="js/bootstrap-3.3.5-js-bootstrap.min.js"></script> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+-->
+
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.3-jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='bootstrap-3.3.5-js-bootstrap.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='highcharts.js') }}"></script>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/bootstrap-3.3.5-css-bootstrap.min.css') }}"> 
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/bootstrap-3.3.5-css-bootstrap-theme.min.css') }}"> 
+    
+
+  </head>
+  <body style="height:87%; background-color: #FBFCE1">
+   
+      <center><h1> Crime Analysis (Batch) </h1></center>    
+      <div style="height: 500px; margin-bottom: 100px;">
+      <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+      
+      <div id="map" style="height:100%; width:50%;margin-top: 100px;margin-left: 20px;border-color:blue; border-radius:20px;border-style:solid; display:inline-block; float: left;"></div>
+
+      
+      <div style="display:inline-block; margin-top:100px; margin-left: 50px; width:40%">   
+          <table class="table-fill" style="100%">
+          <thead>
+          <tr>
+          <th class="text-left" style="width:50%">Parameters</th>
+          <th class="text-left" style="width:50%">Values</th>
+          </tr>
+          </thead>
+          <tbody class="table-hover">
+          <tr>
+          <td class="text-left" style="width:50%">Latitude, Longitude</td>
+          <td class="text-left" style="width:50%"><span id="latlongID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Total Number of Crimes</td>
+          <td class="text-left"><span id="tnocID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Average Latency* (in minutes) </td>
+          <td class="text-left"><span id="latencyID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Radius (in miles)</td>
+          <td class="text-left"><span id="radiusID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">CrimesToShow</td>
+          <td class="text-left"><span id="crimesToShowID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left" colspan="2" style="text-align: center;"><span> Average Latency is the average time difference between <b><i> crime reporting timestamp </b></i> and <b><i> crime occurring timestamp</b></i> </span></td>
+          </tr>
+          </tbody>
+          </table>
+
+      </div>
+      </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <center><h2> Analytic Charts </h2></center>
+    <div style="text-align: center;">
+    <div id="pie_container" style="width: 550px; height: 400px; margin: 20px 20px; display:inline-block;"></div>
+    <div id="line_container" style="width: 1000px; height: 400px; margin: 20px 20px; display:inline-block;"></div>
+    </div>
+    <center><h1> Simulate Real time crime </h1>
+    <div class="bs-example">
+              <form class="form-inline" role="form" style="text-align: center:">
+                  <div class="form-group">
+                      <label class="sr-only" for="crimeTypeID">Crime Type</label>
+                      <input type="text" class="form-control" id="crimeTypeID" placeholder="Crime Type" style="height:40px;">
+                  </div>
+                  <div class="form-group">
+                      <label class="sr-only" for="crimeLocationID">Crime Location</label>
+                      <input type="text" class="form-control" id="crimeLocationID" placeholder="Crime Location" style="width:400px; margin-left:40px; margin-right:40px;height:40px;">
+                  </div>
+<!--                  <div class="checkbox">
+                      <label><input type="checkbox"> Remember me</label>
+                  </div>
+        -->
+                  <button type="button" onclick="submitCrime_RT()" class="btn btn-primary">Generate Crime</button>
+              </form>
+              <br>
+              <div class="alert alert-info">
+                  <a href="#" class="close" data-dismiss="alert">×</a>
+                  <strong>Note:</strong> Please enter crime location and crime type to generate realtime crimes.
+              </div>
+          </div>
+      </center>
+      <br/>
+    <center><h1> Real Time Crime Analysis </h1>
+    <br/><span id="realTimeMessage" ></span></center>    
+
+    <div id="map_canvas" style="height:60%; width:50%;margin-top: 30px; margin-left: 20px;border-color:blue; border-radius:20px;border-style:solid;display:inline-block;float: left;"></div>
+   <span>
+      <div style="display:inline-block; margin-top:30px; margin-left: 50px; width:40%">   
+          <table class="table-fill">
+          <thead>
+          <tr>
+          <th class="text-left">Parameters</th>
+          <th class="text-left">Values</th>
+          </tr>
+          </thead>
+          <tbody class="table-hover">
+          <tr>
+          <td class="text-left">Latitude, Longitude</td>
+          <td class="text-left"><span id="latlong_realID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Total Number of Crimes</td>
+          <td class="text-left"><span id="tnoc_realID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Average Latency* (in minutes)</td>
+          <td class="text-left"><span id="latency_realID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">Radius (in miles)</td>
+          <td class="text-left"><span id="radius_realID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left">CrimesToShow</td>
+          <td class="text-left"><span id="crimesToShow_realID"></span></td>
+          </tr>
+          <tr>
+          <td class="text-left" colspan="2" style="text-align: center;"><span> Average Latency is the average time difference between <b><i> crime reporting timestamp </b></i> and <b><i> crime occurring timestamp</b></i> </span></td>
+          </tr>
+          </tbody>
+          </table>
+      </div>
+      </span>
+
+<!--    <div id="map_canvas2" style="width:700px; height:500px; margin-left:80px;" ></div>-->
+  <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+      <center><h1><span id="userListID"></span></h1></center>
+
+<!--
+    <form id="fetchCrimesData" class="form-inline" action="/crimeanalysis/" method="POST">
+              <div class="form-group text-center">
+                      <div class="input-group">
+                              <input style="border-radius:4px;" type="text" class="form-control" name="latitudeName" id="latitudeName" placeholder="username" value="444.4444">
+                              <input style="border-radius:4px;" type="text" class="form-control" name="longitudeName" id="longitudeName" placeholder="username" value="5555.5555">
+                      </div>
+                      <button type="submit" value="Send" name="username-container" class="btn btn-default id-submit">Submit</button>
+              </div>
+      </form> -->
+      
+<script type="text/javascript"> 
+
+// This example adds a search box to a map, using the Google Place Autocomplete
+// feature. People can enter geographical searches. The search box will return a
+// pick list containing a mix of places and predicted search terms.
+var map1;
+latitudeVar = 0;
+longitudeVar = 0;
+cityCircle = null;
+function initAutocomplete() {
+
+/*  var myOptions = {
+    zoom: 14,
+    center: new google.maps.LatLng(0.0, 0.0),
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  }
+//    map1 = new google.maps.Map(document.getElementById("map_canvas"),                            myOptions);
+
+    map2 = new google.maps.Map(document.getElementById("map_canvas2"),
+                                   myOptions);  
+*/
+
+
+  var citymap = {
+  chicago: {
+      center: {lat: 41.878, lng: -87.629},
+      population: 2714856
+    },
+    newyork: {
+      center: {lat: 40.714, lng: -74.005},
+      population: 8405837
+    },
+    losangeles: {
+      center: {lat: 34.052, lng: -118.243},
+      population: 3857799
+    },
+    vancouver: {
+      center: {lat: 49.25, lng: -123.1},
+      population: 603502
+    }
+  };
+
+  var map = new google.maps.Map(document.getElementById('map'), {
+    center: citymap['losangeles'].center,
+    zoom: 11,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  });
+
+  var map1 = new google.maps.Map(document.getElementById('map_canvas'), {
+    center: citymap['losangeles'].center,
+    zoom: 11,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  });
+
+
+  // Create the search box and link it to the UI element.
+  var input = document.getElementById('pac-input');
+  var searchBox = new google.maps.places.SearchBox(input);
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+
+  var crimeInput = document.getElementById('crimeLocationID');
+  var crimeInputValue = new google.maps.places.SearchBox(crimeInput);
+
+  // Bias the SearchBox results towards current map's viewport.
+  map.addListener('bounds_changed', function() {
+    searchBox.setBounds(map.getBounds());
+  });
+
+  crimeInputValue.addListener('places_changed', function() {
+    var crimeplaces = crimeInputValue.getPlaces();
+
+    if (crimeplaces.length == 0) {
+      return;
+    }
+    
+    crimeplaces.forEach(function(place) {
+      latitudeVar = place.geometry.location.lat();
+      longitudeVar = place.geometry.location.lng();        
+    });
+  });
+
+
+
+  var markers = [];
+  // [START region_getplaces]
+  // Listen for the event fired when the user selects a prediction and retrieve
+  // more details for that place.
+  searchBox.addListener('places_changed', function() {
+    var places = searchBox.getPlaces();
+
+    if (places.length == 0) {
+      return;
+    }
+
+    // Clear out the old markers.
+    markers.forEach(function(marker) {
+      marker.setMap(null);
+    });
+    markers = [];
+
+    // For each place, get the icon, name and location.
+    var bounds = new google.maps.LatLngBounds();
+    places.forEach(function(place) {
+
+      latitude = place.geometry.location.lat();
+      longitude = place.geometry.location.lng();
+      //alert('latitude is:' + latitude);
+      //alert('longitude is:' + longitude);
+      //document.getElementById('latitudeName').value = latitude;
+      //document.getElementById('longitudeName').value = longitude;
+      //alert('latitude is: ' + latitude + 'longitude is:' + longitude);
+    $.getJSON('/crimebatchprocessing/'+ latitude + '/' + longitude ,
+      function(data) {
+        //data = data.crimesBatchObj.crimesArray;
+        alert('/crimebatchprocessing ==> data is: ' + data.crimesBatchObj.crimesArray);
+        //alert('data is: ' + data.crimesBatchObj);
+        // Nice code snippet - To print any object with all its values - start
+            var result = "";
+            for (var p in data) {
+                if( data.hasOwnProperty(p) ) {
+                  result += p + " , " + data[p] + "\n";
+                }
+              }    
+          alert('/crimebatchprocessing result is: '+ result);
+            // Nice code snippet - To print any object with all its values - end 
+
+        //data = data.crimesBatchObj;
+        document.getElementById('latlongID').innerHTML =  data.crimesBatchObj.latitude.substring(0,8) + ", " + data.crimesBatchObj.longitude.substring(0,8);
+        document.getElementById('tnocID').innerHTML = data.crimesBatchObj.totalCrimes;
+        document.getElementById('radiusID').innerHTML = data.crimesBatchObj.distance;
+        document.getElementById('crimesToShowID').innerHTML = data.crimesBatchObj.crimeToshow;
+        document.getElementById('latencyID').innerHTML = data.crimesBatchObj.delay;
+
+      });
+
+
+    $.getJSON('/groupby_crimetype/'+ latitude + '/' + longitude ,
+      function(dataobject) {
+        var responseObj = dataobject.crimeTypeResponse;
+        //alert('inside groupby_crimetype ==> data is:'+ data);
+        //alert('data is: ' + data.crimesBatchObj);
+        // Nice code snippet - To print any object with all its values - start
+        /*result = "";
+        for(var data in responseObj) {
+            var result = "";
+            for (var p in data) {
+                if( data.hasOwnProperty(p) ) {
+                  result += p + " , " + data[p] + "\n";
+                }
+              }
+          }    
+          alert('final result is: '+ result);
+          */
+            // Nice code snippet - To print any object with all its values - end 
+
+        piechartObj = [];
+        for (var index=0; index< responseObj.length;index++) {
+        tempObject = [];
+         tempObject.push(responseObj[index]['crimetype']);
+         tempObject.push(responseObj[index]['crimecount']);
+        piechartObj.push(tempObject);
+        }
+
+        var series = {
+           type: 'pie'
+        };
+
+       var chart = {
+       plotBackgroundColor: null,
+       backgroundColor: null,
+       plotBorderWidth: null,
+       plotShadow: false
+       };
+       var title = {
+          text: 'Crimes distribution based on crime type'   
+       };      
+       var tooltip = {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+       };
+
+       var plotOptions = {
+          pie: {
+             allowPointSelect: true,
+             cursor: 'pointer',
+             dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}%</b>: {point.percentage:.1f} %',
+                style: {
+                   color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                }
+             }
+          }
+       };
+       var series= [{
+            type: 'pie',
+            name: 'CrimeCount',
+             data: piechartObj
+         }];  
+
+
+       var json = {};   
+         json.chart = chart; 
+         json.title = title;     
+         json.tooltip = tooltip;  
+         json.series = series;
+         json.plotOptions = plotOptions;
+         $('#pie_container').highcharts(json);  
+
+ });
+
+  $.getJSON('/groupby_crimetype_month/'+ latitude + '/' + longitude ,
+      function(responseObject) {
+        
+        //alert('responseObject is:' + responseObject);
+        var responseObj = responseObject.lineChartResponse.crimeLineGraphObj;
+        result = "";
+        for(var data in responseObj) {
+          var result = "";
+          for (var p in data) {
+              if( data.hasOwnProperty(p) ) {
+                result += p + " , " + data[p] + "\n";
+              }
+            }
+        }    
+//        alert('inside groupby_crimetype_month ==> result is: '+ result);
+        //alert('responseObject.x_axis is: ' + responseObject.lineChartResponse.x_axis);
+        var title = {
+            text: 'Crimes distribution over last 2 years'   
+         };
+         var subtitle = {
+            text: 'Source'
+         };
+         var xAxis = {
+            categories: responseObject.lineChartResponse.x_axis
+         };
+ 
+/*         var xAxis = {
+            categories: ['Jan1', 'Feb1', 'Mar', 'Apr', 'May', 'Jun',
+               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+         };
+*/         var yAxis = {
+            title: {
+               text: 'crime count'
+            }
+         };
+
+         var chart = {
+           backgroundColor: null,
+         };
+
+         var plotOptions = {
+            line: {
+               dataLabels: {
+                  enabled: true
+               },   
+               enableMouseTracking: true
+            }
+         };
+
+         var series= responseObj;
+
+         var json = {};
+         json.chart = chart;
+         json.title = title;
+         json.subtitle = subtitle;
+         json.xAxis = xAxis;
+         json.yAxis = yAxis;  
+         json.series = series;
+         json.plotOptions = plotOptions;
+         $('#line_container').highcharts(json);
+     });
+
+
+      var icon = {
+        url: place.icon,
+        size: new google.maps.Size(71, 71),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(17, 34),
+        scaledSize: new google.maps.Size(25, 25)
+      };
+
+      alert('cityCircle is:' + cityCircle);
+      if (cityCircle === undefined || cityCircle === null) {
+          //do something
+      }
+      else {
+        cityCircle.setMap(null);
+      }
+
+      cityCircle = new google.maps.Circle({
+      strokeColor: '#FF0000',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#FF0000',
+      fillOpacity: 0.35,
+      map: map,
+      center: place.geometry.location,
+      radius: 5000
+    });
+
+      // Create a marker for each place.
+      markers.push(new google.maps.Marker({
+        map: map,
+        icon: icon,
+        title: place.name,
+        position: place.geometry.location
+      }));
+
+
+
+
+      if (place.geometry.viewport) {
+        // Only geocodes have viewport.
+        bounds.union(place.geometry.viewport);
+      } else {
+        bounds.extend(place.geometry.location);
+      }
+    });
+    map.fitBounds(bounds);
+    map.setZoom(12);
+  });
+  // [END region_getplaces]
+}
+
+function submitCrime_RT(){
+    var crimeType = document.getElementById('crimeTypeID').value;  
+    var crimeLocation = document.getElementById('crimeLocationID').value;  
+    
+    //alert('before : crimeType is: ' + crimeType + ' and crimeLocation is: ' + crimeLocation + ' and latlong is: ' + latitudeVar + ', '+ longitudeVar);
+    //geolocate();
+    //alert('after: crimeType is: ' + crimeType + ' and crimeLocation is: ' + crimeLocation + ' and latlong is: ' + latitudeVar + ', '+ longitudeVar);
+    //      $.getJSON('/submitcrime/'+ crimeType + '/' + latitude + '/' + longitude ,
+      $.getJSON('/submitcrime/' + crimeType + '/' + latitudeVar + '/' + longitudeVar,
+      function(data) {
+        data = data.crimeResponse;
+//        alert('submitcrime_rt output data is: ' + data);
+
+        // Nice code snippet - To print any object with all its values - start
+/*            var result = "";
+            for (var p in data) {
+                if( data.hasOwnProperty(p) ) {
+                  result += p + " , " + data[p] + "\n";
+                }
+              }    
+*/          //alert('final result is: '+ result);
+           // Nice code snippet - To print any object with all its values - end 
+        //data = data.crimesBatchObj;
+
+      });
+
+}
+
+function geolocate() {
+/*  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      var geolocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      latitudeVar = position.coords.latitude;
+      longitudeVar = position.coords.longitude;
+    });
+  }*/
+}
+
+
+function getCurrentCrimes() {
+  $.getJSON('/getCurrentCrimes/',
+    function(data) {
+      //alert('get data is: '+ data);
+      //alert('get crimeRealObj is: '+ data.crimeRealObj);
+     // Nice code snippet - To print any object with all its values - start
+     /*     var result = "";
+          for (var p in data.crimeRealObj) {
+              if( data.crimeRealObj.hasOwnProperty(p) ) {
+                result += p + " , " + data.crimeRealObj[p] + "\n";
+              }
+            }    
+    */
+    //  alert('final result is: '+ result);
+//      if(len(data.crimeRealObj) > 0) {
+//        alert('latlong is: '+ data.crimeRealObj.latitude.substring(0,8) + ", " + data.crimeRealObj.longitude.substring(0,8));
+      
+        var count = Object.keys(data.crimeRealObj).length;
+        //alert('count is:' + count);
+        if(0 < count) {
+            var latitudeTemp = 'should not come';
+            var longitudeTemp = 'should not come';
+            document.getElementById('realTimeMessage').innerHTML =  "";
+            if(data.crimeRealObj.latitude.length > 8) {
+              latitudeTemp = data.crimeRealObj.latitude.substring(0,8);
+            }
+            else {
+              latitudeTemp = data.crimeRealObj.latitude;
+            }
+
+            if(data.crimeRealObj.longitude.length > 8) {
+              longitudeTemp = data.crimeRealObj.longitude.substring(0,8);
+            }
+            else {
+              longitudeTemp = data.crimeRealObj.longitude;
+            }
+//            alert('part1');
+            document.getElementById('latlong_realID').innerHTML =  latitudeTemp + ", " + longitudeTemp;
+            document.getElementById('tnoc_realID').innerHTML = data.crimeRealObj.totalCrimes;
+            document.getElementById('radius_realID').innerHTML = data.crimeRealObj.distance;
+            document.getElementById('crimesToShow_realID').innerHTML = data.crimeRealObj.crimeToshow;
+            document.getElementById('latency_realID').innerHTML = data.crimeRealObj.delay;
+
+            // display USER ARRAY:
+            document.getElementById("userListID").innerHTML = "";
+            var userList = data.crimeRealObj.userList;
+            for (index =0 ; index< userList.length; index++) {
+              document.getElementById("userListID").innerHTML = document.getElementById("userListID").innerHTML + userList[index]['userID'] + ", " + userList[index]['userName'] + "\n" ;
+            }
+
+  //          alert('part2');
+          }
+        else {
+    //        alert('part3');
+            document.getElementById('realTimeMessage').innerHTML =  "No crime in last 20 seconds";
+            document.getElementById('latlong_realID').innerHTML =  "No data available";
+            document.getElementById('tnoc_realID').innerHTML = "No data available";
+            document.getElementById('radius_realID').innerHTML = "No data available";
+            document.getElementById('crimesToShow_realID').innerHTML = "No data available";
+            document.getElementById('latency_realID').innerHTML = "No data available";
+            document.getElementById("userListID").innerHTML = "No users near by to alert ";
+        }
+  });
+}
+
+/*window.setInterval(function(){
+  /// call your function here
+  getCurrentCrimes();
+}, 20000000000);
+*/
+
+</script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=initAutocomplete"
+         async defer></script>
+  </body>
+</html>
