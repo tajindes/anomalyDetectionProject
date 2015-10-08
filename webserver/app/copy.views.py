@@ -8,6 +8,7 @@ from random import randint
 import json
 
 es = Elasticsearch([
+    "http://52.88.189.215:9200/",
     "http://52.88.119.135:9200/",
     "http://52.11.180.149:9200/",
     "http://54.69.39.4:9200/"
@@ -20,6 +21,154 @@ def index():
    #user = { 'nickname': 'Miguel' } # fake user
    return render_template("start.html", title = 'Home')
 
+
+'''
+@app.route('/crimeanalysis/', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>/', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>/', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>/<crimeToshow>', methods=['POST'])
+@app.route('/crimeanalysis/<latitude>/<longitude>')
+@app.route('/crimeanalysis/<latitude>/<longitude>/')
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>')
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>/')
+@app.route('/crimeanalysis/<latitude>/<longitude>/<distance>/<crimeToshow>')
+def get_crimeanalysis(latitude = 0, longitude =  0, distance = 10, crimeToshow = 10):
+	
+	print "inside crimeanalysis"
+	
+
+	currentDateStr = str(datetime.datetime.now().year) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day)
+	pastDateStr = str(datetime.datetime.now().year - 4) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day)
+
+	latitude = request.form["latitudeName"]
+	longitude = request.form["longitudeName"]
+
+	#res = es.search(index="crimes", body={"size" : 0,"query": {	"filtered" : { 	"query" : { "range" : {	"crime_rptd_ts" : { "from" : "2008-12-10", "to" : "2015-12-12" }}},	"filter" : {"geo_distance" : { 	"distance" : "100km","crimelocation" : {"lat" : 34.58055532646853,"lon" : -118.04095426497035}}}}},"aggregations": {"avg_timediff_mil_seconds": {"avg": {"script": "(doc.crime_rptd_ts.value - doc.crime_ts.value)/(1000*60)"}}}})
+	print "distance is:" + str(distance);
+	
+	res = es.search(index="crimes", body={
+	"size" : crimeToshow,
+  "query": {
+   "filtered" : {
+          "query" : {
+             "range" : {
+                "crime_rptd_ts" : { "from" : pastDateStr, "to" : currentDateStr }
+              }
+           },
+          "filter" : {
+              "geo_distance" : {
+                  "distance" :  str(distance) + "km",
+                  "crimelocation" : {
+                    "lat" : latitude,
+                    "lon" : longitude
+                  }
+              }
+          }
+      }
+  },
+   "aggregations": {
+    "avg_timediff_mil_seconds": {
+       "avg": {
+          "script": "(doc.crime_rptd_ts.value - doc.crime_ts.value)/(1000*60)"
+       }
+    }
+ }
+});
+
+	
+	print "Got delay of %d minuts:" % res['aggregations']['avg_timediff_mil_seconds']['value']
+	
+	totalCrimes = 	res['hits']['total']
+	delay = float(res['aggregations']['avg_timediff_mil_seconds']['value'])
+	delay = delay/60.0;
+
+	crimesArray = [];
+	for hit in res['hits']['hits']:
+	    #print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
+		print("source output is: " +  str(hit["_source"]['crimelocation']))
+		crimesArray.append(str(hit["_source"]['crimelocation']));
+	
+	#jsonresponse = {"crime_rptd_ts": str(hit["_source"]['crime_rptd_ts']}
+	
+
+	jsonresponse = {"latitude": latitude, "longitude" : longitude, "totalCrimes": totalCrimes, "distance": distance, "delay": delay, "crimeToshow": crimeToshow, "crimesArray": crimesArray}
+
+	return render_template("index_results.html", title = 'Home', jsonresponse = jsonresponse, originalLatitude = latitude, originalLongitude = longitude)
+	
+	#return render_template("index_results.html", title = 'Home', jsonresponse = "hello")
+	#jsonresponse = [{"first name": x.fname, "last name": x.lname, "id": x.id, "message": x.message, "time": x.time} for x in response_list]
+	#return jsonify(emails=jsonresponse)
+'''
+
+'''
+@app.route('/index_results', methods=['POST'])
+def realtime():
+	print "tajinder is power";
+	currentDateStr = str(datetime.datetime.now().year) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day) + "T" +  str(datetime.datetime.now().hour) + ":" + str(datetime.datetime.now().minute) + ":"+ str(datetime.datetime.now().second) + "Z"
+	pastDateStr = str(datetime.datetime.now().year - 5) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day) + "T" +  str(datetime.datetime.now().hour - 2) + ":" + str(datetime.datetime.now().minute) + ":"+ str(datetime.datetime.now().second) + "Z"
+	latitude = request.form["latitudeName"]
+	longitude = request.form["longitudeName"]
+
+	latitudeArray = ["34.50513310992017","34.62836269750458","34.54892379497885","34.52475659243565","34.53429661748165"];
+	longiitudeArray = ["-118.08617092708121","-118.08747681788974","-117.9508115346","-118.10998612882413","-118.08450536844308"]
+
+	random_number = randint(0,4)
+	latitude = latitudeArray[random_number];
+	longitude = longiitudeArray[random_number];
+
+	print "latitude is:" + latitude + " and longitude is: " + longitude;
+	print "pastDateStr is:" + pastDateStr + " and currentDateStr is: " + currentDateStr;
+
+	res = es.search(index="crimes", body={
+		"size" : 10,
+	  	"query": {
+	   	"filtered" : {
+	        "query" : {
+	             "range" : {
+	                "crime_rptd_ts" : { "from" : pastDateStr, "to" : currentDateStr }
+	              }
+	           },
+	          "filter" : {
+	              "geo_distance" : {
+	                  "distance" :  "10km",
+	                  "crimelocation" : {
+	                    "lat" : latitude,
+	                    "lon" : longitude
+	                  }
+	              }
+	          }
+	      	}
+	  	},
+   "aggregations": {
+    "avg_timediff_mil_seconds": {
+       "avg": {
+          "script": "(doc.crime_rptd_ts.value - doc.crime_ts.value)/(1000*60)"
+       }
+    }
+ }
+	});
+
+	print "Got delay of %d minuts:" % res['aggregations']['avg_timediff_mil_seconds']['value']
+	
+	totalCrimes = 	res['hits']['total']
+	delay = float(res['aggregations']['avg_timediff_mil_seconds']['value'])
+	delay = delay/60.0;
+
+	crimesArray = [];
+	for hit in res['hits']['hits']:
+	    #print("%(timestamp)s %(author)s: %(text)s" % hit["_source"])
+		print("source output is: " +  str(hit["_source"]['crimelocation']))
+		crimesArray.append(str(hit["_source"]['crimelocation']));
+	
+	#jsonresponse = {"crime_rptd_ts": str(hit["_source"]['crime_rptd_ts']}
+	
+
+	jsonresponse = {"latitude": latitude, "longitude" : longitude, "totalCrimes": totalCrimes, "distance": "10km", "delay": delay, "crimeToshow": "10", "crimesArray": crimesArray}
+
+ 	return render_template("index_results.html", title = 'Home', jsonresponse = jsonresponse)
+'''
 
 @app.route("/groupby_crimetype_month/<latitude>/<longitude>")
 @app.route("/groupby_crimetype_month/<latitude>/<longitude>/<distance>")
@@ -206,8 +355,8 @@ def crimesBatchStatistics(latitude, longitude, distance = 50, crimeToshow = 10, 
     
 	#latitude = request.form["latitudeName"]
 	#longitude = request.form["longitudeName"]
-	print 'latitude is:' + str(latitude) + ' and longitude is: ' + str(longitude);
-	print 'pastDateStr is:' + str(pastDateStr) + ' and currentDateStr is: ' + str(currentDateStr);
+	print 'latitude is:' + latitude + ' and longitude is: ' + longitude;
+	print 'pastDateStr is:' + pastDateStr + ' and currentDateStr is: ' + currentDateStr;
 
 	res = es.search(index="crimes", body={
 	"size" : crimeToshow,
@@ -273,6 +422,7 @@ def gotoHomepage():
 	#print 'tajinder homepage'
  	return render_template("homepage.html")
 
+
 @app.route("/gotoIndexpage", methods=['POST'])
 @app.route("/gotoIndexpage")
 def gotoIndexpage():
@@ -331,14 +481,34 @@ def submitcrime_rtFunction(crimetype, latitude, longitude):
 def getCurrentCrimes():
 	print 'inside getCurrentCrimes function'
 	secondVar = "00";
-	
-	if(datetime.datetime.now().second > 10):
-		print 'datetime.dateimte.now().second is: ' + str(datetime.datetime.now().second);
-		secondsVar = str(datetime.datetime.now().second - 10).zfill(2);
-		print 'after second is:' + secondsVar;
-	
+	if(datetime.datetime.now().second > 20):
+		secondsVar = str(datetime.datetime.now().second - 20).zfill(2);
+
 	currentDateStr = str(datetime.datetime.now().year) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day) + "T" +  str(datetime.datetime.now().hour) + ":" + str(datetime.datetime.now().minute) + ":"+ str(datetime.datetime.now().second) + "Z"
 	pastDateStr = str(datetime.datetime.now().year) + "-" + str(datetime.datetime.now().month) + "-" + str(datetime.datetime.now().day) + "T" +  str(datetime.datetime.now().hour) + ":" + str(datetime.datetime.now().minute) + ":"+ str(secondVar) + "Z"
+	'''
+	res = es.search(index="crimes", body={
+	"size" : 1,
+	  "query": {
+	   "filtered" : {
+	          "query" : {
+	             "range" : {
+	                "crime_rptd_ts" : { "from" : pastDateStr, "to" : currentDateStr }
+	              }
+	           },
+	          "filter" : {
+	              "geo_distance" : {
+	                  "distance" :  "50km",
+	                  "crimelocation" : {
+	                    "lat" : latitude,
+	                    "lon" : longitude
+	                  }
+	              }
+	          }
+	      }
+	  }
+	});
+	'''
 
 	res = es.search(index="crime_realtime", body={
 	"size" : 1,
@@ -351,7 +521,7 @@ def getCurrentCrimes():
 	        }
 	    }
 	  }
-	},request_timeout=100);
+	});
 
 	crimetypeVar = "";
 	crime_rptd_tsVar = "";
@@ -366,13 +536,13 @@ def getCurrentCrimes():
 		latitudeVar = 	res['hits']['hits'][0]['_source']['crimelocation']['lat']
 		longitudeVar = 	res['hits']['hits'][0]['_source']['crimelocation']['lon']
 
-		#print 'result of search query is:' + str(res);
-		#print 'crimetypeVar is:'+ crimetypeVar + ' and crime_rptd_tsVar is:' + crime_rptd_tsVar
-		#print ' and crimelocationVar is: ' + str(latitudeVar) + ', ' + str(longitudeVar);
+		print 'result of search query is:' + str(res);
+		print 'crimetypeVar is:'+ crimetypeVar + ' and crime_rptd_tsVar is:' + crime_rptd_tsVar
+		print ' and crimelocationVar is: ' + latitudeVar + ', ' + longitudeVar;
 
 		jsonresponse = crimesBatchStatistics(latitudeVar, longitudeVar, 100, 10, "real");
-		#print 'crimeOutput_rt is:' + str(jsonresponse);
-		#print 'crimeOutput_rt delay is:' + str(jsonresponse['delay']);
+		print 'crimeOutput_rt is:' + str(jsonresponse);
+		print 'crimeOutput_rt delay is:' + str(jsonresponse['delay']);
 
 		userResult = es.search(index="crime-subscribe-users", body={
 		 "query": {
@@ -391,10 +561,10 @@ def getCurrentCrimes():
 		          }
 		      }
 		  }
-		},request_timeout=100);
+		});
 		userArray = [];
 		userResultLength = len(userResult['hits']['hits'])
-		#print "userResultLength is: " + str(userResultLength);
+		print "userResultLength is: " + str(userResultLength);
 		if( 0 < userResultLength):
 			for userObject in userResult['hits']['hits']:
 				userIdVar = userObject['_source']['userID'];

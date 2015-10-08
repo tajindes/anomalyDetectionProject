@@ -90,7 +90,36 @@
       }
 
 
+.table-wrapper
+{
+    width: 80%;
+    height: 200px;
+    overflow: auto;
+    margin-bottom: 50px;
+}
 
+.table_alert
+{
+    border: 1px solid black;
+    margin-right: 20px;
+    width:100%;
+}
+
+.td_location
+{
+    width: 30%;
+    height: 40px;
+    background-color: #ccc;
+    padding-left: 10px;
+}
+
+.td_alert
+{
+    width: 70%;
+    height: 40px;
+    background-color: #ccc;
+    padding-left: 10px;
+}
 
 
 
@@ -238,8 +267,17 @@
 
 <!--    <div id="map_canvas2" style="width:700px; height:500px; margin-left:80px;" ></div>-->
   <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-      <center><h1><span id="userListID"></span></h1></center>
-
+      <center><!-- <h1><span id="userListID"></span></h1>-->
+    
+      <div class="table-wrapper">
+          <table id="subscribedUsersID" class="table_alert">
+              <tr>
+                  <td class="td_location" style="font-weight: bold; text-align: center; padding-top: 10px; padding-bottom: 5px; font-size: 25px;"> Latitude, Longitude </td>
+                  <td class="td_alert" style="font-weight: bold; text-align: center; padding-top: 10px; padding-bottom: 5px; font-size: 25px;"> Users to alert </td>                  
+              </tr>
+          </table>      
+      </div>
+      </center>
 <!--
     <form id="fetchCrimesData" class="form-inline" action="/crimeanalysis/" method="POST">
               <div class="form-group text-center">
@@ -260,6 +298,11 @@ var map1;
 latitudeVar = 0;
 longitudeVar = 0;
 cityCircle = null;
+realMarker = null;
+realTimeCircle = null;
+map1 = null;
+lastLatitude = "";
+lastLongitude = "";
 function initAutocomplete() {
 
 /*  var myOptions = {
@@ -299,7 +342,7 @@ function initAutocomplete() {
     mapTypeId: google.maps.MapTypeId.ROADMAP
   });
 
-  var map1 = new google.maps.Map(document.getElementById('map_canvas'), {
+    map1 = new google.maps.Map(document.getElementById('map_canvas'), {
     center: citymap['losangeles'].center,
     zoom: 11,
     mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -358,10 +401,6 @@ function initAutocomplete() {
 
       latitude = place.geometry.location.lat();
       longitude = place.geometry.location.lng();
-      //alert('latitude is:' + latitude);
-      //alert('longitude is:' + longitude);
-      //document.getElementById('latitudeName').value = latitude;
-      //document.getElementById('longitudeName').value = longitude;
       //alert('latitude is: ' + latitude + 'longitude is:' + longitude);
     $.getJSON('/crimebatchprocessing/'+ latitude + '/' + longitude ,
       function(data) {
@@ -533,7 +572,7 @@ function initAutocomplete() {
         scaledSize: new google.maps.Size(25, 25)
       };
 
-      alert('cityCircle is:' + cityCircle);
+      //alert('cityCircle is:' + cityCircle);
       if (cityCircle === undefined || cityCircle === null) {
           //do something
       }
@@ -571,6 +610,7 @@ function initAutocomplete() {
       }
     });
     map.fitBounds(bounds);
+//map.setCenter(LatLng)
     map.setZoom(12);
   });
   // [END region_getplaces]
@@ -621,7 +661,7 @@ function geolocate() {
 function getCurrentCrimes() {
   $.getJSON('/getCurrentCrimes/',
     function(data) {
-      //alert('get data is: '+ data);
+      //alert('getCurrentCrimes ==> data is: '+ data);
       //alert('get crimeRealObj is: '+ data.crimeRealObj);
      // Nice code snippet - To print any object with all its values - start
      /*     var result = "";
@@ -638,6 +678,7 @@ function getCurrentCrimes() {
         var count = Object.keys(data.crimeRealObj).length;
         //alert('count is:' + count);
         if(0 < count) {
+
             var latitudeTemp = 'should not come';
             var longitudeTemp = 'should not come';
             document.getElementById('realTimeMessage').innerHTML =  "";
@@ -661,13 +702,98 @@ function getCurrentCrimes() {
             document.getElementById('crimesToShow_realID').innerHTML = data.crimeRealObj.crimeToshow;
             document.getElementById('latency_realID').innerHTML = data.crimeRealObj.delay;
 
-            // display USER ARRAY:
-            document.getElementById("userListID").innerHTML = "";
-            var userList = data.crimeRealObj.userList;
-            for (index =0 ; index< userList.length; index++) {
-              document.getElementById("userListID").innerHTML = document.getElementById("userListID").innerHTML + userList[index]['userID'] + ", " + userList[index]['userName'] + "\n" ;
+//            var markers = [];
+          
+            var realIcon = {
+              url:  "{{ url_for('static', filename = 'images/red_MarkerC.png') }}",
+              size: new google.maps.Size(71, 71),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(17, 34),
+              scaledSize: new google.maps.Size(25, 25)
+            };
+
+            //alert('cityCircle is:' + cityCircle);
+            if (realTimeCircle === undefined || realTimeCircle === null) {
+                //do something
+            }
+            else {
+              realTimeCircle.setMap(null);
             }
 
+            //alert('cityCircle is:' + cityCircle);
+            if (realMarker === undefined || realMarker === null) {
+                //do something
+            }
+            else {
+              realMarker.setMap(null);
+            }
+
+            var crimeLocationVar = new google.maps.LatLng(latitudeTemp, longitudeTemp); 
+            realTimeCircle = new google.maps.Circle({
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35,
+            map: map1,
+            center: crimeLocationVar,
+            radius: 5000
+          });
+
+          // Create a marker for each place.
+          /*markers.push(new google.maps.Marker({
+            map: map1,
+            icon: realIcon,
+            animation: google.maps.Animation.DROP,
+            title: "crime location",
+            position: new google.maps.LatLng(latitudeTemp, longitudeTemp)
+          }));*/
+          realMarker = new google.maps.Marker({
+            map: map1,
+            icon: realIcon,
+            animation: google.maps.Animation.DROP,
+            title: "crime location",
+            position: crimeLocationVar
+          });
+          
+          map1.setCenter(crimeLocationVar)
+          map1.setZoom(12);
+            // display USER ARRAY:
+            //document.getElementById("userListID").innerHTML = "";
+
+            var userList = data.crimeRealObj.userList;
+            //alert('userList is:' + userList);
+            var usersListVar = "";
+            for (index =0 ; index< userList.length; index++) {
+              //document.getElementById("userListID").innerHTML = document.getElementById("userListID").innerHTML + userList[index]['userID'] + ", " + userList[index]['userName'] + "\n" ;
+              usersListVar = usersListVar + "[" + userList[index]['userID'] + " ==> " + userList[index]['userName'] + "]";
+            }
+
+            var table = document.getElementById("subscribedUsersID");
+            /*var row = table.insertRow(1);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+	    */
+	    //alert('lastLatitude is: '+ lastLatitude + " and lastLongitude is: " + lastLongitude + " and latitudeTemp is: " + latitudeTemp + " and longitudeTemp is: "+ longitudeTemp);
+	    if((lastLatitude == latitudeTemp) && (lastLongitude == longitudeTemp)) {
+	    		
+	    }
+	    else {
+	    var row = table.insertRow(1);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            cell1.innerHTML = latitudeTemp + ", " + longitudeTemp;
+            cell1.className += (cell1.className ? " " : "")+"td_location";
+            cell2.className += (cell2.className ? " " : "")+"td_alert";
+            if(usersListVar == "") {
+              cell2.innerHTML = "No nearby users to alert";
+            }
+            else {
+              cell2.innerHTML = usersListVar;
+            }
+	    lastLatitude = latitudeTemp;
+	    lastLongitude = longitudeTemp;
+	    }
   //          alert('part2');
           }
         else {
@@ -678,16 +804,18 @@ function getCurrentCrimes() {
             document.getElementById('radius_realID').innerHTML = "No data available";
             document.getElementById('crimesToShow_realID').innerHTML = "No data available";
             document.getElementById('latency_realID').innerHTML = "No data available";
-            document.getElementById("userListID").innerHTML = "No users near by to alert ";
+            //document.getElementById("userListID").innerHTML = "No users near by to alert ";
         }
   });
 }
 
-/*window.setInterval(function(){
+
+window.setInterval(function(){
   /// call your function here
   getCurrentCrimes();
-}, 20000000000);
-*/
+}, 3000);
+
+
 
 </script>
 
