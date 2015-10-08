@@ -3,6 +3,7 @@ import logging
 import random
 import time
 import pyelasticsearch
+from datetime import datetime 
 from pyleus.storm import SimpleBolt
 
 from kafka import KafkaClient, SimpleProducer
@@ -44,28 +45,6 @@ class RequestProcessingBolt(SimpleBolt):
             "lon": parsed_msg['location']['longitude']
         }
 
-	
-	'''
-	query = {
-	  "query": {
-	   "filtered" : {
-             	  "query" : {
-	             "range" : {
-        	        "crime_ts" : { "from" : "2014-12-10", "to" : "2015-12-12" }
-	              }
-        	   },
-	          "filter" : {
-        	      "geo_distance" : {
-                	  "distance" : "100km",
-	                  "crimelocation" : {
-        	            "lat" : 34.0442,
-                	    "lon" : -118.2519
-	                  }
-        	      }
-	          }	
-	      }
-	  }
-	}
 	'''
 	query = {
           "query": {
@@ -84,11 +63,11 @@ class RequestProcessingBolt(SimpleBolt):
               }
           }
         }
-
+	'''
 
 	#res = es.search('crimecode:354', index='crimes')
         log.debug("++++++++++++++++executing search query+++++++++++++++")
-        res = es.search(query, index=INDEX_NAME)
+        '''res = es.search(query, index=INDEX_NAME)
 
         hits = res['hits']['hits']
         hits_count = len(hits)
@@ -113,22 +92,12 @@ class RequestProcessingBolt(SimpleBolt):
 		monthsDictionary[str(dateValue.tm_mon) + '-' + str(dateValue.tm_year)] = 1;
 	    
 	
+	'''
 
         #index = random.randint(0, hits_count - 1)
         #crime_id = hits[index]['_id']
 	
 	# send to kafka
-        '''
-	msg = {}
-        msg['crime_id'] = crime_id
-        msg['occupancy_status'] = 1
-
-        crime_doc = {
-            "is_occupied": "1"
-        }
-
-        crime_type = 'crime'
-	'''
 	
 	#es.create_index("test12_index", settings=None)
 	#delete it after testing -start
@@ -140,69 +109,42 @@ class RequestProcessingBolt(SimpleBolt):
 	#es.index(', 'person', {'name': 'Joe Tester', 'age': 25, 'title': 'QA Master'}, id=1);
 
 	try:
-	    es.create_index("crimeanalysis", settings=None)
+	    es.create_index("crime_realtime", settings=None)
 	except:
 	    pass
+
+	time_raw = parsed_msg['time_rptd'].zfill(4);
+	timeTempStr = time_raw[:2]+ ":"+ time_raw[2:] + ":" + "00"
+      	crime_rptd_ts = datetime.strptime(parsed_msg['date_rptd']+ " " + timeTempStr, '%m/%d/%Y %H:%M:%S')
+	#crime_rptd_ts = datetime.strptime('30/03/09 16:31:32.123', '%d/%m/%y %H:%M:%S.%f')
 	
+
+	#dateTemp = datetime.datetime.strptime(date_rptd_raw, '%m/%d/%y').strftime('%Y-%m-%d')
+	#datetime.datetime.now().strftime("%Y-%m-%d %H:%M"
+	#crime_rptd_ts = datetime.datetime.strptime(parsed_msg['date_rptd'], '%m/%d/%y').strftime('%Y-%m-%d')
+
+	crimelocation = {
+            "lat": parsed_msg['location']['latitude'],
+            "lon": parsed_msg['location']['longitude']
+        }
+
+	modeldocument = {
+	    "crime_id":parsed_msg['crime_id'],
+	    "crimelocation":crimelocation,
+	    "crimetype":parsed_msg['crimetype'],
+	    "crime_rptd_ts":crime_rptd_ts
+	}
+
+	'''	
 	modeldocument = {
             "lat": parsed_msg['location']['latitude'],
             "lon": parsed_msg['location']['longitude'],
             "monthsDictionary": monthsDictionary
 	}
 	'''
-	modeldocument = {
-	    "lat": parsed_msg['location']['latitude'],
-	    "lon": parsed_msg['location']['longitude'],
-	    "jan": "11",
-	    "feb":"22",
-            "mar":"33",
-            "apr":"44",
-            "may":"55",
-            "jun":"66",
-            "jul":"77",
-            "aug":"88",
-            "sep":"99",
-            "oct":"87",
-            "nov":"76",
-            "dec":"65",
-            "jan1": "11",
-            "feb1":"22",
-            "mar1":"33",
-            "apr1":"44",
-            "may1":"55",
-            "jun1":"66",
-            "jul1":"77",
-            "aug1":"88",
-            "sep1":"99",
-            "oct1":"87",
-            "nov1":"76",
-            "dec1":"65",
-	}
-	'''
 	
-	es.index("crimeanalysis","crime", modeldocument, overwrite_existing=True)
+	es.index("crime_realtime","crime", modeldocument, overwrite_existing=True)
 
-	'''	
-        try:
-            res = es.update(index="crimesanalysis",
-                            id=crime_id,
-                            doc="taj_doc",
-                            doc_type=crime_type,
-                            retry_on_conflict=2)
-
-            log.debug("+++++++++++++++++++updated occupancy for crime %s++++++++++++++++++++\n", crime_id)
-            log.debug(res)
-        except Exception as e:
-            log.error("++++++++++FAILED TO UPDATE OCCUPANCY+++++++++")
-            log.error("%s\n", str(e))
-
-            #
-            # log.debug("+++++++++++++++++++sending occupancy_update event for crime %s++++++++++++++++++++\n", crime_id)
-            # producer.send_messages(
-            #     "occupancy_update",
-            #     json.dumps(msg))
-        
-	'''
 	#print "DONE - LAST STATEMENT"
 	
 

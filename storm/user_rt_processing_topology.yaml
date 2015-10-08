@@ -1,0 +1,52 @@
+# This is a non-operational example demonstrating the use of a Kafka spout.
+#
+name: user_rt_processing_topology
+
+workers: 3
+
+max_spout_pending: 36
+
+topology:
+
+- spout:
+        name: kafka-spout
+        parallelism_hint: 12
+        tasks: 12
+        type: kafka
+        options:
+            # The Kafka topic to stream from.
+            # Required.
+            topic: "user_rt"
+
+            # ZooKeeper connection string. Comma-separated list of ZooKeeper
+            # servers.
+            # Required.
+#            zk_hosts: 52.8.145.247:2181,52.8.148.251:2181,52.8.158.130:2181,52.8.162.105:2181,52.8.153.92:2181
+            zk_hosts: 52.10.17.219:2181,52.88.120.236:2181,52.26.38.25:2181,52.88.136.55:2181
+
+            # 172.31.6.220:2181, 172.31.6.221:2181
+
+            # Root path in ZooKeeper to store consumer offsets.
+            # Defaults to: /pyleus-kafka-offsets/<topology name>
+            zk_root: /pyleus-kafka-offsets/user_rt_processing_topology
+
+            # Kafka consumer ID.
+#           # Defaults to: pyleus-<topology name>
+            consumer_id: pyleus-user_rt_processing_topology
+
+            # Whether the initial offset should be that specified by
+#           # start_offset_time (true) or the head of the stream (false).
+#           # Defaults to false.
+            from_start: false
+
+            #The offset time to start with if from_start is true.
+#           # Defaults to the earliest offset time in the stream.
+            start_offset_time: 2147483648
+
+- bolt:
+        name: user_rt_processing_bolt
+        parallelism_hint: 12
+        tasks: 12
+        module: user_rt_processing_topology.userProcessingBolt
+        groupings:
+            - shuffle_grouping: kafka-spout
