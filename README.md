@@ -29,6 +29,7 @@ Read further for more details about the project
 To simulate user movement, I wrote a producer script (python) that generates users' locations randomly all over the United States.
 ![data](images/user_rt.png)
 
+
 To simulate crimes, I wrote a producer script (python) that generates crimes randomly all over the united states.
 ![data](images/crime_rt.png)
 
