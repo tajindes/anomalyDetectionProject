@@ -90,7 +90,7 @@ The topologies send their logs to the **pyleus** directory in **/tmp** so please
 	mkdir pyleus
 
 ### Configuration files
-Please see [configurations](notes/configurations) for the settings I use for my set up.
+Please see [configurations](config) for the settings I use for my set up.
  
 ### Storm
 #### Master node: Nimbus and UI daemons
