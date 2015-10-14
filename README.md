@@ -21,6 +21,7 @@ It makes use of the following technologies:
 
 ## Live Demo
 A [live demo](http://www.crimefighter.ninja) is currently (October 2015) running.
+[Demo video](https://www.youtube.com/watch?v=ZKI5gnJ2KDE) is currently available on YouTube.
 
 Read further for more details about the project
 
@@ -183,6 +184,6 @@ Add the following lines to **/etc/supervisord.conf/zookeeper.conf** on all the z
 	stdout_logfile=/usr/local/zookeeper/logs/zk.out.log
 
 ## Presentation Deck
-My presentation slides are available at [slideshare](http://www.slideshare.net/tajtaj/tajinder-presentation).
+My presentation slides are available at [slideshare](http://www.slideshare.net/tajtaj/tajinder-presentation3).
 
 
